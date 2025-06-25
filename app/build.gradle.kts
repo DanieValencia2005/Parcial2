@@ -75,4 +75,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Para pruebas de LiveData y ViewModel (InstantTaskExecutorRule)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
