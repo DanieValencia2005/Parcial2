@@ -5,6 +5,7 @@ import com.ud.parcial2.model.PujaRequest
 import com.ud.parcial2.model.Subasta // ← ¡IMPORTANTE!
 import com.ud.parcial2.network.RetrofitInstance
 
+// com/ud/parcial2/repository/SubastaRepository.kt
 class SubastaRepository {
     private val api = RetrofitInstance.api
 
@@ -12,6 +13,7 @@ class SubastaRepository {
     suspend fun detalleSubasta(id: Int) = api.getDetalleSubasta(id)
     suspend fun obtenerPujas() = api.obtenerPujas()
     suspend fun enviarPuja(puja: PujaRequest) = api.enviarPuja(puja)
-    suspend fun obtenerGanadores(): List<GanadorResponse> = api.obtenerGanadores()
+    suspend fun obtenerGanadores() = api.obtenerGanadores()
     suspend fun crearSubasta(subasta: Subasta) = api.crearSubasta(subasta)
 }
+

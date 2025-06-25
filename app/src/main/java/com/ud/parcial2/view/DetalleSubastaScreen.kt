@@ -17,122 +17,111 @@ import coil.compose.AsyncImage
 import com.ud.parcial2.viewmodel.SubastaViewModel
 
 @Composable
-fun DetalleSubastaScreen(
-    navController: NavController,
-    viewModel: SubastaViewModel,
-    subastaId: Int
-) {
-    val detalle by viewModel.detalleSubasta.observeAsState()
-    val pujas by viewModel.pujas.observeAsState(emptyList())
-    val ganador by viewModel.ganador.observeAsState()
+fun DetalleSubastaScreen(navController: NavController, vm: SubastaViewModel, subastaId: Int) {
+    val det by vm.detalleSubasta.observeAsState()
+    val pujas by vm.pujas.observeAsState(emptyList())
     val context = LocalContext.current
+    val ganador by vm.ganador.observeAsState()
 
     var nombre by remember { mutableStateOf("") }
     var monto by remember { mutableStateOf("") }
-    var posicionSeleccionada by remember { mutableStateOf<Int?>(null) }
-    var imagenUrl by remember { mutableStateOf("") }
+    var posSel by remember { mutableStateOf<Int?>(null) }
+    var pujaUrl by remember { mutableStateOf("") }
 
     LaunchedEffect(subastaId) {
-        viewModel.cargarDetalle(subastaId)
-        viewModel.cargarPujas()
+        vm.cargarDetalle(subastaId)
+        vm.cargarPujas()
     }
 
-    detalle?.let { subasta ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)) {
-            Text(subasta.titulo, style = MaterialTheme.typography.headlineSmall)
-            Text(subasta.descripcion, style = MaterialTheme.typography.bodyMedium)
+    det?.let { s ->
+        Column(Modifier.fillMaxSize().padding(16.dp)) {
+            Text(s.titulo, style = MaterialTheme.typography.headlineSmall)
+            Text(s.descripcion, style = MaterialTheme.typography.bodyMedium)
+
+            s.imagenUrl?.let {
+                Spacer(Modifier.height(8.dp))
+                AsyncImage(model = it, contentDescription = null, modifier = Modifier.size(120.dp))
+            }
+
             Spacer(Modifier.height(20.dp))
 
-            if (subasta.estado == "activa") {
-                val posicionesOcupadas = pujas.filter { it.subastaId == subastaId }.map { it.posicion }
+            if (s.estado == "activa") {
+                val ocup = pujas.filter { it.subastaId == subastaId }.map { it.posicion }
 
-                Column {
-                    for (row in 0 until 10) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            for (col in 0 until 10) {
-                                val pos = row * 10 + col
-                                val ocupado = pos in posicionesOcupadas
-                                Button(
-                                    onClick = { if (!ocupado) posicionSeleccionada = pos },
-                                    enabled = !ocupado,
-                                    modifier = Modifier.size(32.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = when {
-                                            ocupado -> MaterialTheme.colorScheme.error
-                                            pos == posicionSeleccionada -> MaterialTheme.colorScheme.primary
-                                            else -> MaterialTheme.colorScheme.surfaceVariant
-                                        }
-                                    )
-                                ) {
-                                    Text(pos.toString(), style = MaterialTheme.typography.labelSmall)
-                                }
+                for (row in 0 until 10) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        for (col in 0 until 10) {
+                            val pos = row * 10 + col
+                            val ocupado = pos in ocup
+                            Button(
+                                onClick = { if (!ocupado) posSel = pos },
+                                enabled = !ocupado,
+                                modifier = Modifier.size(32.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = when {
+                                        ocupado -> MaterialTheme.colorScheme.error
+                                        pos == posSel -> MaterialTheme.colorScheme.primary
+                                        else -> MaterialTheme.colorScheme.surfaceVariant
+                                    }
+                                )
+                            ) {
+                                Text(pos.toString(), style = MaterialTheme.typography.labelSmall)
                             }
                         }
-                        Spacer(Modifier.height(4.dp))
                     }
+                    Spacer(Modifier.height(4.dp))
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
-                    nombre,
-                    { nombre = it },
+                    value = nombre,
+                    onValueChange = { nombre = it },
                     label = { Text("Tu nombre") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
-                    monto,
-                    { monto = it },
+                    value = monto,
+                    onValueChange = { monto = it },
                     label = { Text("Monto") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
-                    imagenUrl,
-                    { imagenUrl = it },
-                    label = { Text("URL de imagen (opcional)") },
+                    value = pujaUrl,
+                    onValueChange = { pujaUrl = it },
+                    label = { Text("URL imagen puja (opcional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                if (imagenUrl.isNotBlank()) {
-                    Spacer(Modifier.height(8.dp))
-                    AsyncImage(
-                        model = imagenUrl,
-                        contentDescription = null,
-                        modifier = Modifier.size(100.dp)
-                    )
-                }
-
                 Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        if (nombre.isBlank() || monto.toDoubleOrNull() == null || posicionSeleccionada == null) {
-                            Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
-                        } else {
-                            viewModel.enviarPuja(
-                                subastaId,
-                                nombre,
-                                monto.toDouble(),
-                                posicionSeleccionada!!,
-                                imagenUrl
-                            )
-                            Toast.makeText(context, "Puja enviada", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+
+                Button(onClick = {
+                    if (nombre.isBlank() || monto.toDoubleOrNull() == null || posSel == null) {
+                        Toast.makeText(context, "Completa los campos", Toast.LENGTH_SHORT).show()
+                    } else {
+                        vm.enviarPuja(
+                            subastaId = subastaId,
+                            usuario = nombre,
+                            monto = monto.toDouble(),
+                            posicion = posSel!!,
+                            imagenUrl = pujaUrl.ifBlank { null }
+                        )
+                        Toast.makeText(context, "Puja enviada", Toast.LENGTH_SHORT).show()
+                    }
+                }, modifier = Modifier.fillMaxWidth()) {
                     Text("Enviar puja")
                 }
             } else {
                 LaunchedEffect(subastaId) {
-                    viewModel.consultarGanador(subastaId)
+                    vm.consultarGanador(subastaId)
                 }
+
                 ganador?.let {
                     Spacer(Modifier.height(20.dp))
                     Text("Ganador: ${it.nombre}", style = MaterialTheme.typography.bodyLarge)

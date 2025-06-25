@@ -20,33 +20,19 @@ import com.ud.parcial2.viewmodel.SubastaViewModelFactory
 
 @Composable
 fun SubastaApp() {
-    val navController = rememberNavController()
-    val viewModel: SubastaViewModel = viewModel(factory = SubastaViewModelFactory())
+    val nav = rememberNavController()
+    val vm: SubastaViewModel = viewModel(factory = SubastaViewModelFactory())
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate("crear") }) {
-                Icon(Icons.Default.Add, contentDescription = "Crear")
-            }
+    Scaffold(floatingActionButton = {
+        FloatingActionButton(onClick = { nav.navigate("crear") }) {
+            Icon(Icons.Default.Add, contentDescription="Crear")
         }
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = "lista",
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            composable("lista") {
-                ListaSubastasScreen(navController, viewModel)
-            }
-            composable("crear") {
-                CrearSubastaScreen(navController, viewModel)
-            }
-            composable(
-                route = "detalle/{id}",
-                arguments = listOf(navArgument("id") { type = NavType.IntType })
-            ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getInt("id") ?: return@composable
-                DetalleSubastaScreen(navController, viewModel, id)
+    }) { pad ->
+        NavHost(nav, startDestination="lista", Modifier.padding(pad)) {
+            composable("lista") { ListaSubastasScreen(nav, vm) }
+            composable("crear") { CrearSubastaScreen(nav, vm) }
+            composable("detalle/{id}", arguments=listOf(navArgument("id"){type=NavType.IntType})) {
+                DetalleSubastaScreen(nav, vm, it.arguments!!.getInt("id"))
             }
         }
     }

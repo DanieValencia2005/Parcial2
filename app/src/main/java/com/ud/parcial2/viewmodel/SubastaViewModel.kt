@@ -10,6 +10,7 @@ import com.ud.parcial2.repository.SubastaRepository
 
 
 
+// com/ud/parcial2/viewmodel/SubastaViewModel.kt
 class SubastaViewModel(private val repo: SubastaRepository) : ViewModel() {
     val subastas = MutableLiveData<List<Subasta>>()
     val detalleSubasta = MutableLiveData<Subasta>()
@@ -27,24 +28,24 @@ class SubastaViewModel(private val repo: SubastaRepository) : ViewModel() {
     fun cargarPujas() = viewModelScope.launch {
         pujas.value = repo.obtenerPujas()
     }
-    fun enviarPuja(subastaId: Int, usuario: String, monto: Double, posicion: Int, imagenUrl: String? = null) = viewModelScope.launch {
-        val puja = PujaRequest(subastaId = subastaId, usuario = usuario, monto = monto, posicion = posicion, imagenUrl = imagenUrl)
+
+    fun enviarPuja(subastaId: Int, usuario: String, monto: Double, posicion: Int, imagenUrl: String?) = viewModelScope.launch {
+        val puja = PujaRequest(null, subastaId, usuario, monto, posicion, imagenUrl)
         repo.enviarPuja(puja)
         cargarPujas()
     }
 
 
-
     fun consultarGanador(id: Int) = viewModelScope.launch {
-        val lista = repo.obtenerGanadores()  // ← carga la lista completa
-        ganador.value = lista.find { it.id == id }  // ← filtra por ID
-    }
-    fun crearSubasta(titulo: String, descripcion: String, estado: String) = viewModelScope.launch {
-        val nuevaSubasta = Subasta(titulo = titulo, descripcion = descripcion, estado = estado)
-        repo.crearSubasta(nuevaSubasta)
-        cargarSubastas() // opcional: refresca la lista
+        val lista = repo.obtenerGanadores()
+        ganador.value = lista.find { it.id == id }
     }
 
-
+    fun crearSubasta(titulo: String, descripcion: String, estado: String, imagenUrl: String?) = viewModelScope.launch {
+        val nueva = Subasta(null, titulo, descripcion, estado, imagenUrl)
+        repo.crearSubasta(nueva)
+        cargarSubastas()
+    }
 }
+
 
